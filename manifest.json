@@ -1,0 +1,7 @@
+{
+  "name": "vsql_currency",
+  "version": "0.0.1",
+  "description": "ISO 4217 currency-code type for VillageSQL (Rust port of adjust/pg-currency)",
+  "author": "Dominic <dominic@villagesql.com>",
+  "license": "GPL-2.0"
+}

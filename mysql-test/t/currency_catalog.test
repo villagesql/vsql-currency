@@ -1,0 +1,48 @@
+# Helper functions describe the set of supported currencies: a total count, a
+# membership test, and a prefix-based listing that returns a JSON array.
+
+INSTALL EXTENSION vsql_currency;
+
+CREATE DATABASE currency_db;
+USE currency_db;
+
+# currency_count() reports how many ISO 4217 codes are supported.
+SELECT vsql_currency.currency_count() AS supported_count;
+
+# is_currency() reports whether a code is supported. The check is
+# case-insensitive and returns NULL for a NULL input.
+SELECT
+  vsql_currency.is_currency('USD')  AS known_upper,
+  vsql_currency.is_currency('usd')  AS known_lower,
+  vsql_currency.is_currency('XYZ')  AS unknown,
+  vsql_currency.is_currency(NULL)   AS null_input;
+
+# supported_currencies(prefix) returns the codes beginning with the prefix as
+# a JSON array, in alphabetical order. The prefix is case-insensitive.
+SELECT vsql_currency.supported_currencies('U') AS codes_u;
+SELECT vsql_currency.supported_currencies('gb') AS codes_gb;
+
+# The JSON result carries the binary character set, so it must be converted to
+# utf8mb4 before MySQL's JSON functions will accept it. JSON_TABLE then unpacks
+# the array into rows.
+SELECT code
+FROM JSON_TABLE(
+  CONVERT(vsql_currency.supported_currencies('U') USING utf8mb4),
+  '$[*]' COLUMNS (code CHAR(3) PATH '$')
+) AS j
+WHERE code = 'USD';
+
+# Passing the array unconverted is rejected by JSON_TABLE.
+--error 3144
+SELECT * FROM JSON_TABLE(
+  vsql_currency.supported_currencies('U'),
+  '$[*]' COLUMNS (code CHAR(3) PATH '$')
+) AS j;
+
+# An empty prefix is rejected: the full list of codes is too large to return
+# in one call, so a prefix is required.
+--error 3200
+SELECT vsql_currency.supported_currencies('');
+
+DROP DATABASE currency_db;
+UNINSTALL EXTENSION vsql_currency;

@@ -1,0 +1,47 @@
+# Currency values order alphabetically by their code, compare for equality,
+# and can be indexed. These tests also document which aggregate functions are
+# available over a CURRENCY column.
+
+INSTALL EXTENSION vsql_currency;
+
+CREATE DATABASE currency_db;
+USE currency_db;
+
+CREATE TABLE ledger (id INT PRIMARY KEY AUTO_INCREMENT, c vsql_currency.currency);
+INSERT INTO ledger (c) VALUES ('USD'), ('EUR'), ('JPY'), ('GBP');
+
+# ORDER BY sorts alphabetically by code (EUR, GBP, JPY, USD).
+SELECT c FROM ledger ORDER BY c;
+
+# Equality matches a single code and excludes the others.
+SELECT c FROM ledger WHERE c = 'USD';
+SELECT c FROM ledger WHERE c = 'EUR';
+
+# Range comparison works because storage order follows alphabetical order.
+SELECT c FROM ledger WHERE c < 'JPY' ORDER BY c;
+
+# A CURRENCY column can be indexed and queried through the index.
+CREATE TABLE indexed (c vsql_currency.currency, KEY (c));
+INSERT INTO indexed (c) VALUES ('USD'), ('EUR'), ('USD');
+SELECT c FROM indexed WHERE c = 'USD';
+
+# Aggregates that order or group by value are available.
+CREATE TABLE totals (c vsql_currency.currency);
+INSERT INTO totals (c) VALUES ('USD'), ('EUR'), ('USD'), ('JPY');
+SELECT COUNT(*) AS rows_total FROM totals;
+SELECT COUNT(DISTINCT c) AS distinct_codes FROM totals;
+SELECT MIN(c) AS lowest, MAX(c) AS highest FROM totals;
+SELECT GROUP_CONCAT(c ORDER BY c) AS all_codes FROM totals;
+SELECT c, COUNT(*) AS n FROM totals GROUP BY c ORDER BY c;
+
+# Numeric aggregates are not meaningful for a code and are rejected, as is
+# COUNT over the column itself.
+--error 1221
+SELECT SUM(c) FROM totals;
+--error 1221
+SELECT AVG(c) FROM totals;
+--error 1221
+SELECT COUNT(c) FROM totals;
+
+DROP DATABASE currency_db;
+UNINSTALL EXTENSION vsql_currency;
