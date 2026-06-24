@@ -39,10 +39,10 @@ SELECT * FROM JSON_TABLE(
   '$[*]' COLUMNS (code CHAR(3) PATH '$')
 ) AS j;
 
-# An empty prefix is rejected: the full list of codes is too large to return
-# in one call, so a prefix is required.
---error 3200
-SELECT vsql_currency.supported_currencies('');
+# An empty prefix returns the full list. The result exceeds the 256-byte
+# default buffer; the function's prerun sizes the buffer to fit, so the entire
+# list of codes comes back intact (not truncated).
+SELECT vsql_currency.supported_currencies('') AS every_supported_code;
 
 DROP DATABASE currency_db;
 UNINSTALL EXTENSION vsql_currency;
