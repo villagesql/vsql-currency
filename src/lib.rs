@@ -106,32 +106,13 @@ fn currency_hash(stored: &[u8]) -> usize {
     stored_index(stored) as usize
 }
 
-/// Return the supported ISO 4217 codes whose name begins with `prefix`, as a
-/// JSON array of strings in alphabetical order. The prefix is case-insensitive.
+/// Build the JSON array of supported codes whose name begins with `prefix`
+/// (case-insensitive; an empty prefix matches every code), in alphabetical
+/// order, e.g. `["USD","UYU"]`.
 ///
-/// VEF has no set-returning functions and a scalar string result is capped at
-/// 256 bytes — too small for all 164 codes at once. Enumeration is therefore
-/// chunked by prefix: pass a single letter (`'U'`) to list that group, or a
-/// longer prefix to narrow further. Callers unpack the array into rows with
-/// `JSON_TABLE()`; wrap the call in `CONVERT(... USING utf8mb4)` for the JSON
-/// functions. Returns NULL for a NULL argument; errors on an empty prefix.
-fn supported_currencies(args: &[InValue]) -> VdfReturn {
-    let prefix = match string_arg(args, "supported_currencies") {
-        Ok(Some(prefix)) => prefix,
-        Ok(None) => return VdfReturn::null(),
-        Err(message) => return VdfReturn::error(message),
-    };
-    if prefix.is_empty() {
-        return VdfReturn::error(format!(
-            "supported_currencies: a non-empty prefix is required \
-             (the full {}-code list exceeds the 256-byte return limit); \
-             query by first letter, e.g. supported_currencies('U')",
-            CODES.len()
-        ));
-    }
-    if !prefix.bytes().all(|b| b.is_ascii_alphabetic()) {
-        return VdfReturn::error("supported_currencies: prefix must be ASCII letters");
-    }
+/// This is the single source of truth for the function's output, so the result
+/// buffer can be sized directly from it via [`supported_currencies_buffer`].
+fn supported_currencies_json(prefix: &str) -> String {
     let upper = prefix.to_ascii_uppercase();
     let mut json = String::with_capacity(128);
     json.push('[');
@@ -146,7 +127,35 @@ fn supported_currencies(args: &[InValue]) -> VdfReturn {
         json.push('"');
     }
     json.push(']');
-    VdfReturn::string(json)
+    json
+}
+
+/// The largest result `supported_currencies` can ever produce: an empty prefix
+/// matches every code. Sizing the buffer from the function's own output (rather
+/// than a separately-computed number) keeps the two permanently in sync — change
+/// the output format and the buffer follows automatically.
+fn supported_currencies_buffer() -> usize {
+    supported_currencies_json("").len()
+}
+
+/// Return the supported ISO 4217 codes whose name begins with `prefix`, as a
+/// JSON array of strings in alphabetical order. The prefix is case-insensitive.
+///
+/// Pass a single letter (`'U'`) to list that group, or a longer prefix to
+/// narrow further; an empty prefix returns the full list. Callers unpack the
+/// array into rows with `JSON_TABLE()`; wrap the call in
+/// `CONVERT(... USING utf8mb4)` for the JSON functions. Returns NULL for a NULL
+/// argument.
+fn supported_currencies(args: &[InValue]) -> VdfReturn {
+    let prefix = match string_arg(args, "supported_currencies") {
+        Ok(Some(prefix)) => prefix,
+        Ok(None) => return VdfReturn::null(),
+        Err(message) => return VdfReturn::error(message),
+    };
+    if !prefix.bytes().all(|b| b.is_ascii_alphabetic()) {
+        return VdfReturn::error("supported_currencies: prefix must be ASCII letters");
+    }
+    VdfReturn::string(supported_currencies_json(prefix))
 }
 
 /// Return the total number of supported ISO 4217 codes.
@@ -170,6 +179,7 @@ villagesql::extension! {
             supported_currencies,
             "supported_currencies",
             [villagesql::Type::String] -> villagesql::Type::String,
+            buffer_size: supported_currencies_buffer(),
             deterministic: true
         ),
         villagesql::func!(
