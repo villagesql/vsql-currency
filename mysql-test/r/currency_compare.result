@@ -1,0 +1,54 @@
+INSTALL EXTENSION vsql_currency;
+CREATE DATABASE currency_db;
+USE currency_db;
+CREATE TABLE ledger (id INT PRIMARY KEY AUTO_INCREMENT, c vsql_currency.currency);
+INSERT INTO ledger (c) VALUES ('USD'), ('EUR'), ('JPY'), ('GBP');
+SELECT c FROM ledger ORDER BY c;
+c
+EUR
+GBP
+JPY
+USD
+SELECT c FROM ledger WHERE c = 'USD';
+c
+USD
+SELECT c FROM ledger WHERE c = 'EUR';
+c
+EUR
+SELECT c FROM ledger WHERE c < 'JPY' ORDER BY c;
+c
+EUR
+GBP
+CREATE TABLE indexed (c vsql_currency.currency, KEY (c));
+INSERT INTO indexed (c) VALUES ('USD'), ('EUR'), ('USD');
+SELECT c FROM indexed WHERE c = 'USD';
+c
+USD
+USD
+CREATE TABLE totals (c vsql_currency.currency);
+INSERT INTO totals (c) VALUES ('USD'), ('EUR'), ('USD'), ('JPY');
+SELECT COUNT(*) AS rows_total FROM totals;
+rows_total
+4
+SELECT COUNT(DISTINCT c) AS distinct_codes FROM totals;
+distinct_codes
+3
+SELECT MIN(c) AS lowest, MAX(c) AS highest FROM totals;
+lowest	highest
+EUR	USD
+SELECT GROUP_CONCAT(c ORDER BY c) AS all_codes FROM totals;
+all_codes
+EUR,JPY,USD,USD
+SELECT c, COUNT(*) AS n FROM totals GROUP BY c ORDER BY c;
+c	n
+EUR	1
+JPY	1
+USD	2
+SELECT SUM(c) FROM totals;
+ERROR HY000: Incorrect usage of sum and currency
+SELECT AVG(c) FROM totals;
+ERROR HY000: Incorrect usage of avg and currency
+SELECT COUNT(c) FROM totals;
+ERROR HY000: Incorrect usage of count and currency
+DROP DATABASE currency_db;
+UNINSTALL EXTENSION vsql_currency;

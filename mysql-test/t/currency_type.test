@@ -1,0 +1,37 @@
+# The CURRENCY type stores an ISO 4217 code in a single byte and reads it
+# back as the canonical three-letter code. These tests cover storing and
+# retrieving values, case-insensitive input, NULL handling, and rejection of
+# codes that are not valid ISO 4217 currencies.
+
+INSTALL EXTENSION vsql_currency;
+
+CREATE DATABASE currency_db;
+USE currency_db;
+
+# A CURRENCY column accepts a three-letter code and returns it unchanged.
+CREATE TABLE wallet (id INT PRIMARY KEY AUTO_INCREMENT, c vsql_currency.currency);
+INSERT INTO wallet (c) VALUES ('USD');
+SELECT c FROM wallet;
+
+# Input is case-insensitive: lowercase and mixed-case codes are normalized to
+# the uppercase canonical form on the way in.
+INSERT INTO wallet (c) VALUES ('eur'), ('jPy');
+SELECT c FROM wallet ORDER BY id;
+
+# A nullable column stores NULL when no value is supplied.
+INSERT INTO wallet (c) VALUES (NULL);
+SELECT id, c FROM wallet WHERE c IS NULL;
+
+# Unknown codes, codes of the wrong length, and non-alphabetic input are all
+# rejected, so an invalid value can never reach storage.
+--error 1366
+INSERT INTO wallet (c) VALUES ('XYZ');
+--error 1366
+INSERT INTO wallet (c) VALUES ('US');
+--error 1366
+INSERT INTO wallet (c) VALUES ('USDD');
+--error 1366
+INSERT INTO wallet (c) VALUES ('12');
+
+DROP DATABASE currency_db;
+UNINSTALL EXTENSION vsql_currency;

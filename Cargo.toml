@@ -1,0 +1,16 @@
+[workspace]
+members = ["."]
+resolver = "2"
+
+[package]
+name = "vsql_currency"
+version = "0.0.1"
+edition = "2021"
+license = "GPL-2.0-only"
+description = "ISO 4217 currency-code type for VillageSQL (Rust port of adjust/pg-currency)"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+villagesql = "0.0.1"

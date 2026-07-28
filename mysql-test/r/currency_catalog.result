@@ -1,0 +1,36 @@
+INSTALL EXTENSION vsql_currency;
+CREATE DATABASE currency_db;
+USE currency_db;
+SELECT vsql_currency.currency_count() AS supported_count;
+supported_count
+164
+SELECT
+vsql_currency.is_currency('USD')  AS known_upper,
+vsql_currency.is_currency('usd')  AS known_lower,
+vsql_currency.is_currency('XYZ')  AS unknown,
+vsql_currency.is_currency(NULL)   AS null_input;
+known_upper	known_lower	unknown	null_input
+1	1	0	NULL
+SELECT vsql_currency.supported_currencies('U') AS codes_u;
+codes_u
+["UAH","UGX","USD","UYU","UZS"]
+SELECT vsql_currency.supported_currencies('gb') AS codes_gb;
+codes_gb
+["GBP"]
+SELECT code
+FROM JSON_TABLE(
+CONVERT(vsql_currency.supported_currencies('U') USING utf8mb4),
+'$[*]' COLUMNS (code CHAR(3) PATH '$')
+) AS j
+WHERE code = 'USD';
+code
+USD
+SELECT * FROM JSON_TABLE(
+vsql_currency.supported_currencies('U'),
+'$[*]' COLUMNS (code CHAR(3) PATH '$')
+) AS j;
+ERROR 22032: Cannot create a JSON value from a string with CHARACTER SET 'binary'.
+SELECT vsql_currency.supported_currencies('');
+ERROR HY000: VDF error in function 'supported_currencies': supported_currencies: a non-empty prefix is required (the full 164-code list exceeds the 256-byte return limit); query by first letter, e.g. supported_currencies('U')
+DROP DATABASE currency_db;
+UNINSTALL EXTENSION vsql_currency;
