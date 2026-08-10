@@ -108,12 +108,10 @@ SELECT vsql_currency.is_currency(NULL);    -- NULL
 
 Returns the supported codes whose name begins with `prefix` (case-insensitive),
 as a JSON array of strings in alphabetical order. Returns `NULL` for a `NULL`
-argument. An empty prefix raises an error, and a non-letter prefix raises an
-error.
+argument. An empty prefix returns the full list of all 164 codes; a prefix
+containing anything other than ASCII letters raises an error.
 
-A single scalar string result is limited to 256 bytes, which is too small for all
-164 codes at once, so enumeration is chunked by prefix — pass a first letter to
-list that group, or a longer prefix to narrow further.
+Pass a first letter to list that group, or a longer prefix to narrow further.
 
 The result carries the `binary` character set, so wrap it in
 `CONVERT(... USING utf8mb4)` before handing it to MySQL's JSON functions. Use
@@ -185,35 +183,34 @@ SELECT c FROM t ORDER BY c;                   -- EUR, USD (both)
 - **NULL handling** follows MySQL: a NULL argument to a function yields NULL.
 - **Set-returning function:** `supported_currencies()` cannot return a row set
   (VEF has no SRFs) and a scalar string is capped at 256 bytes, so it returns a
-  JSON array chunked by prefix; expand with `JSON_TABLE`.
+  JSON array; expand with `JSON_TABLE`.
 - **JSON character set:** function string results are `binary`; wrap them in
   `CONVERT(... USING utf8mb4)` for JSON functions.
 - **Aggregates:** `MIN`, `MAX`, `COUNT(*)`, `COUNT(DISTINCT c)`, and
   `GROUP_CONCAT(c)` work on a `currency` column. `SUM`, `AVG`, and `COUNT(c)` are
   rejected (a currency code is not a number).
 - **No `CAST(... AS currency)`** — store via a column instead.
-- **Upgrades** require `UNINSTALL` + `INSTALL` (there is no `ALTER EXTENSION`), and
-  dependent columns must be dropped or migrated first.
+- **Upgrades** take effect at the next server restart:
+  `ALTER EXTENSION vsql_currency VERSION '<v>' AT RESTART`. `UNINSTALL` +
+  `INSTALL` also works, and requires dependent columns to be dropped or migrated
+  first.
 
 ### Blocked functions and their workaround
 
 - `supported_currencies()` as a true set-returning function — **blocked**; the
-  prefix-based JSON array above is the supported workaround.
+  JSON array above is the supported workaround.
 
 ## Known Limitations
 
 Each limitation links the upstream VillageSQL issue whose resolution would remove
 the workaround. If a limitation affects you, give the issue a 👍 to signal demand.
 
-- **No set-returning function; 256-byte scalar string cap.** The full 164-code
-  list cannot be returned in one call. `supported_currencies(prefix)` enumerates
-  by prefix; `currency_count()` and `is_currency()` cover counting and membership.
-  A native set-returning / table-function API
+- **No set-returning function.** `supported_currencies(prefix)` returns a JSON
+  array — the full 164-code list when the prefix is empty — which callers expand
+  with `JSON_TABLE()`; `currency_count()` and `is_currency()` cover counting and
+  membership. A native set-returning / table-function API
   ([villagesql-server#549](https://github.com/villagesql/villagesql-server/issues/549))
-  and a larger / dynamic VDF string return
-  ([#641](https://github.com/villagesql/villagesql-server/issues/641),
-  [#343](https://github.com/villagesql/villagesql-server/issues/343)) would remove
-  the prefix-chunking workaround.
+  would remove the `JSON_TABLE()` step.
 - **Function string results use the `binary` character set.** Wrap calls in
   `CONVERT(... USING utf8mb4)` before passing them to JSON functions. Tracked by
   [#612](https://github.com/villagesql/villagesql-server/issues/612) (string
@@ -222,9 +219,11 @@ the workaround. If a limitation affects you, give the issue a 👍 to signal dem
   `COUNT(DISTINCT)`, `MIN`, `MAX`, or `GROUP_CONCAT`. Opt-in numeric promotion for
   custom types is tracked by
   [#605](https://github.com/villagesql/villagesql-server/issues/605).
-- **No in-place upgrade.** Changing the extension requires `UNINSTALL` +
-  `INSTALL`; drop or migrate dependent columns first. The upgrade story is tracked
-  by [#344](https://github.com/villagesql/villagesql-server/issues/344).
+- **No in-place upgrade.** A version change has to wait for a restart:
+  `ALTER EXTENSION vsql_currency VERSION '<v>' AT RESTART` stages it, and
+  `UNINSTALL` + `INSTALL` is the alternative (drop or migrate dependent columns
+  first). Applying an upgrade to a running server is tracked by
+  [#344](https://github.com/villagesql/villagesql-server/issues/344).
 
 ## Security Considerations
 
