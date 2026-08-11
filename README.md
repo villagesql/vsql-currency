@@ -182,8 +182,9 @@ SELECT c FROM t ORDER BY c;                   -- EUR, USD (both)
 - **Case-insensitive input** and **alphabetical ordering** match pg-currency.
 - **NULL handling** follows MySQL: a NULL argument to a function yields NULL.
 - **Set-returning function:** `supported_currencies()` cannot return a row set
-  (VEF has no SRFs) and a scalar string is capped at 256 bytes, so it returns a
-  JSON array; expand with `JSON_TABLE`.
+  (VEF has no SRFs), so it returns a JSON array; expand with `JSON_TABLE`. The
+  buffer is sized from the data at build time by `supported_currencies_buffer()`,
+  so the full list is returned whole.
 - **JSON character set:** function string results are `binary`; wrap them in
   `CONVERT(... USING utf8mb4)` for JSON functions.
 - **Aggregates:** `MIN`, `MAX`, `COUNT(*)`, `COUNT(DISTINCT c)`, and
