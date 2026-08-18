@@ -6,6 +6,9 @@ ISO 4217 currency code in a single byte. It is a Rust port of
 164 currency codes, with case-insensitive input, alphabetical ordering, and
 indexing.
 
+**Docs:** [VillageSQL documentation](https://villagesql.com/docs) ·
+[Install VillageSQL Server](https://villagesql.com/install)
+
 ```sql
 INSTALL EXTENSION vsql_currency;
 
