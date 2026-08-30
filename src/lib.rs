@@ -143,9 +143,9 @@ fn supported_currencies_buffer() -> usize {
 ///
 /// Pass a single letter (`'U'`) to list that group, or a longer prefix to
 /// narrow further; an empty prefix returns the full list. Callers unpack the
-/// array into rows with `JSON_TABLE()`; wrap the call in
-/// `CONVERT(... USING utf8mb4)` for the JSON functions. Returns NULL for a NULL
-/// argument.
+/// array into rows with `JSON_TABLE()`; on VillageSQL 0.0.6 and earlier, wrap
+/// the call in `CONVERT(... USING utf8mb4)` for the JSON functions. Returns
+/// NULL for a NULL argument.
 fn supported_currencies(args: &[InValue]) -> VdfReturn {
     let prefix = match string_arg(args, "supported_currencies") {
         Ok(Some(prefix)) => prefix,
