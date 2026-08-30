@@ -22,9 +22,9 @@ SELECT
 SELECT vsql_currency.supported_currencies('U') AS codes_u;
 SELECT vsql_currency.supported_currencies('gb') AS codes_gb;
 
-# The JSON result carries the binary character set, so it must be converted to
-# utf8mb4 before MySQL's JSON functions will accept it. JSON_TABLE then unpacks
-# the array into rows.
+# Converting the JSON result to utf8mb4 before handing it to JSON_TABLE is
+# still accepted, and is what the documented examples do because VillageSQL
+# 0.0.6 and earlier require it.
 SELECT code
 FROM JSON_TABLE(
   CONVERT(vsql_currency.supported_currencies('U') USING utf8mb4),
@@ -32,8 +32,8 @@ FROM JSON_TABLE(
 ) AS j
 WHERE code = 'USD';
 
-# Passing the array unconverted is rejected by JSON_TABLE.
---error 3144
+# From VillageSQL 0.0.7 the result carries utf8mb4, so JSON_TABLE reads it
+# without the conversion. On 0.0.6 and earlier this raised ER_INVALID_JSON_CHARSET.
 SELECT * FROM JSON_TABLE(
   vsql_currency.supported_currencies('U'),
   '$[*]' COLUMNS (code CHAR(3) PATH '$')
