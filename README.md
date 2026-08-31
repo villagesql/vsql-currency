@@ -122,9 +122,11 @@ containing anything other than ASCII letters raises an error.
 
 Pass a first letter to list that group, or a longer prefix to narrow further.
 
-The result carries the `binary` character set, so wrap it in
-`CONVERT(... USING utf8mb4)` before handing it to MySQL's JSON functions. Use
-`JSON_TABLE()` to expand the array into rows:
+On VillageSQL 0.0.6 and earlier, the result carries the `binary` character
+set, so wrap it in `CONVERT(... USING utf8mb4)` before handing it to MySQL's
+JSON functions (VillageSQL 0.0.7 and later return the correct charset
+directly, but the wrap is harmless to keep, so the examples below use it for
+compatibility with 0.0.6). Use `JSON_TABLE()` to expand the array into rows:
 
 ```sql
 SELECT code
@@ -194,8 +196,9 @@ SELECT c FROM t ORDER BY c;                   -- EUR, USD (both)
   (VEF has no SRFs), so it returns a JSON array; expand with `JSON_TABLE`. The
   buffer is sized from the data at build time by `supported_currencies_buffer()`,
   so the full list is returned whole.
-- **JSON character set:** function string results are `binary`; wrap them in
-  `CONVERT(... USING utf8mb4)` for JSON functions.
+- **JSON character set:** on 0.0.6 and earlier, function string results are
+  `binary`; wrap them in `CONVERT(... USING utf8mb4)` for JSON functions.
+  Fixed in VillageSQL 0.0.7.
 - **Aggregates:** `MIN`, `MAX`, `COUNT(*)`, `COUNT(DISTINCT c)`, and
   `GROUP_CONCAT(c)` work on a `currency` column. `SUM`, `AVG`, and `COUNT(c)` are
   rejected (a currency code is not a number).
@@ -221,10 +224,9 @@ the workaround. If a limitation affects you, give the issue a 👍 to signal dem
   membership. A native set-returning / table-function API
   ([villagesql-server#549](https://github.com/villagesql/villagesql-server/issues/549))
   would remove the `JSON_TABLE()` step.
-- **Function string results use the `binary` character set.** Wrap calls in
-  `CONVERT(... USING utf8mb4)` before passing them to JSON functions. Tracked by
-  [#612](https://github.com/villagesql/villagesql-server/issues/612) (string
-  returns need charset metadata).
+- **Function string results use the `binary` character set on 0.0.6 and
+  earlier.** Wrap calls in `CONVERT(... USING utf8mb4)` before passing them
+  to JSON functions there. Fixed in VillageSQL 0.0.7.
 - **No `SUM`/`AVG`/`COUNT(column)` over a `currency` column.** Use `COUNT(*)`,
   `COUNT(DISTINCT)`, `MIN`, `MAX`, or `GROUP_CONCAT`. Opt-in numeric promotion for
   custom types is tracked by
