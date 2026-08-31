@@ -6,6 +6,13 @@ The test suite uses the standard MySQL test runner (MTR), driven by `cargo-vsql`
 
 - A stable Rust toolchain 1.87 or newer.
 - `cargo-vsql` (`cargo install cargo-vsql`).
+- A checkout of the Rust SDK beside this repository, which `Cargo.toml` reads
+  in place of the published crate:
+
+```bash
+git clone https://github.com/villagesql/vsql-rust-sdk.git ../vsql-rust-sdk
+```
+
 - A built VillageSQL server. Point `cargo-vsql` at its build directory:
 
 ```bash
@@ -50,4 +57,4 @@ Test inputs live in `mysql-test/t/` and expected output in `mysql-test/r/`.
 |---|---|
 | `currency_type.test` | Storing and reading back a code, case-insensitive input, NULL handling, and rejection of unknown / wrong-length / non-letter codes. |
 | `currency_compare.test` | Alphabetical ordering, equality and range comparison, indexing, and which aggregate functions are available (`COUNT(*)`, `COUNT(DISTINCT)`, `MIN`, `MAX`, `GROUP_CONCAT` work; `SUM`, `AVG`, `COUNT(column)` are rejected). |
-| `currency_catalog.test` | `currency_count()`, `is_currency()` (including case-insensitivity and NULL), and `supported_currencies(prefix)` with `JSON_TABLE` expansion, the `CONVERT(... USING utf8mb4)` requirement, and the empty-prefix error. |
+| `currency_catalog.test` | `currency_count()`, `is_currency()` (including case-insensitivity and NULL), and `supported_currencies(prefix)` with `JSON_TABLE` expansion both with and without `CONVERT(... USING utf8mb4)`, plus the full list an empty prefix returns. |

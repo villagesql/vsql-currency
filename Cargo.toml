@@ -8,9 +8,16 @@ version = "0.0.1"
 edition = "2021"
 license = "GPL-2.0-only"
 description = "ISO 4217 currency-code type for VillageSQL (Rust port of adjust/pg-currency)"
+# A path dependency cannot be published to crates.io.
+publish = false
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-villagesql = "0.0.1"
+# The published villagesql crate is 0.0.1, from before the SDK grew the
+# buffer_size field that supported_currencies declares, so this extension
+# cannot build against it. Depend on a checkout of the SDK beside this repo
+# until a crate carrying that field is published, then go back to a version
+# requirement and delete the CI clone step in .github/workflows/ci.yml.
+villagesql = { path = "../vsql-rust-sdk/villagesql" }
