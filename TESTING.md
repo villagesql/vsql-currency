@@ -6,13 +6,6 @@ The test suite uses the standard MySQL test runner (MTR), driven by `cargo-vsql`
 
 - A stable Rust toolchain 1.87 or newer.
 - `cargo-vsql` (`cargo install cargo-vsql`).
-- A checkout of the Rust SDK beside this repository, which `Cargo.toml` reads
-  in place of the published crate:
-
-```bash
-git clone https://github.com/villagesql/vsql-rust-sdk.git ../vsql-rust-sdk
-```
-
 - A built VillageSQL server. Point `cargo-vsql` at its build directory:
 
 ```bash
