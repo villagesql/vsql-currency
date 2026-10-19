@@ -1,0 +1,33 @@
+# Unknown codes, codes of the wrong length, and non-alphabetic input are all
+# rejected as bad values for the CURRENCY type, so an invalid value can never
+# reach storage. Like a built-in type, the rejection is the standard 1366
+# error in strict mode.
+#
+# villagesql 0.0.6 reports an encode Err as a hard error, so the server raises
+# 3219 with the extension's message instead of 1366. The SDK fix maps it to a
+# warning, and ships after 0.0.6.
+#
+# TODO(villagesql-rust): remove the --skip once the villagesql crate dependency
+# is updated past 0.0.6.
+
+--skip Re-enable once the villagesql (Rust SDK) dependency is updated past 0.0.6, which reports an encode Err as a bad value (1366)
+
+INSTALL EXTENSION vsql_currency;
+
+CREATE DATABASE currency_db;
+USE currency_db;
+
+CREATE TABLE wallet (id INT PRIMARY KEY AUTO_INCREMENT, c vsql_currency.currency);
+
+--error ER_TRUNCATED_WRONG_VALUE_FOR_FIELD
+INSERT INTO wallet (c) VALUES ('XYZ');
+--error ER_TRUNCATED_WRONG_VALUE_FOR_FIELD
+INSERT INTO wallet (c) VALUES ('US');
+--error ER_TRUNCATED_WRONG_VALUE_FOR_FIELD
+INSERT INTO wallet (c) VALUES ('USDD');
+--error ER_TRUNCATED_WRONG_VALUE_FOR_FIELD
+INSERT INTO wallet (c) VALUES ('12');
+SELECT COUNT(*) AS stored_rows FROM wallet;
+
+DROP DATABASE currency_db;
+UNINSTALL EXTENSION vsql_currency;

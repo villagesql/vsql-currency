@@ -1,0 +1,17 @@
+INSTALL EXTENSION vsql_currency;
+CREATE DATABASE currency_db;
+USE currency_db;
+CREATE TABLE wallet (id INT PRIMARY KEY AUTO_INCREMENT, c vsql_currency.currency);
+INSERT INTO wallet (c) VALUES ('XYZ');
+ERROR HY000: Incorrect currency value: 'XYZ' for column 'c' at row 1
+INSERT INTO wallet (c) VALUES ('US');
+ERROR HY000: Incorrect currency value: 'US' for column 'c' at row 1
+INSERT INTO wallet (c) VALUES ('USDD');
+ERROR HY000: Incorrect currency value: 'USDD' for column 'c' at row 1
+INSERT INTO wallet (c) VALUES ('12');
+ERROR HY000: Incorrect currency value: '12' for column 'c' at row 1
+SELECT COUNT(*) AS stored_rows FROM wallet;
+stored_rows
+0
+DROP DATABASE currency_db;
+UNINSTALL EXTENSION vsql_currency;
