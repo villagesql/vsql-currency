@@ -25,7 +25,7 @@ Requires the [VillageSQL Rust SDK](https://github.com/villagesql/vsql-rust-sdk)
 and the `cargo-vsql` CLI (`cargo install cargo-vsql`). A stable Rust toolchain
 1.87 or newer is required.
 
-The SDK comes from crates.io: `Cargo.toml` depends on `villagesql = "0.0.6"`,
+The SDK comes from crates.io: `Cargo.toml` depends on `villagesql = "0.0.7"`,
 so no separate SDK checkout is needed. Point `cargo-vsql` at a built VillageSQL
 server and install:
 

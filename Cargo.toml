@@ -4,7 +4,7 @@ resolver = "2"
 
 [package]
 name = "vsql_currency"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 license = "GPL-2.0-only"
 description = "ISO 4217 currency-code type for VillageSQL (Rust port of adjust/pg-currency)"
@@ -15,4 +15,4 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-villagesql = "0.0.6"
+villagesql = "0.0.7"

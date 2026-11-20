@@ -10,9 +10,9 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
 name = "villagesql"
-version = "0.0.6"
+version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05c21944d8c8e25e34e4b245fe88ad0045a742052dfb41ce5a45f7aa4c62d9e3"
+checksum = "308333fa646aac8d6abc411baf8e74d0535fd95ad5e0b5e3d2aed29a2dc5985d"
 dependencies = [
  "paste",
  "villagesql-sys",
@@ -20,13 +20,13 @@ dependencies = [
 
 [[package]]
 name = "villagesql-sys"
-version = "0.0.6"
+version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98540ee00ef154d1f46d328b1839e027e79e13f5c78fa2f2548173a99b118015"
+checksum = "64e8b9e4d2ecc638b0af6c0d3cfea7f282373ad9c441bd5dd9f89c6b96c62a55"
 
 [[package]]
 name = "vsql_currency"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "villagesql",
 ]
